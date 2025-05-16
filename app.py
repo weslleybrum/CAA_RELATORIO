@@ -1,80 +1,66 @@
-from flask import Flask, render_template, request, redirect, url_for, session
-from werkzeug.utils import secure_filename
+from flask import Flask, render_template, request, redirect, url_for, flash
 import pandas as pd
 import os
-import plotly.express as px
-import plotly.io as pio
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.secret_key = 'sua_chave_secreta_aqui'
+app.secret_key = 'chave_super_secreta'  # Troque por uma segura
+
 UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'xlsx'}
+
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
 
-dataframe = None
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 @app.route('/')
-def home():
+def index():
     return render_template('login.html')
 
-@app.route('/login', methods=['POST'])
-def login():
-    username = request.form['username']
-    password = request.form['password']
-    if username == 'admin' and password == '1234':
-        session['user'] = username
-        return redirect(url_for('dashboard'))
-    return render_template('login.html', error='Credenciais inválidas.')
 
 @app.route('/dashboard')
 def dashboard():
-    if 'user' not in session:
-        return redirect(url_for('home'))
     return render_template('dashboard.html')
 
+
 @app.route('/upload', methods=['POST'])
-def upload():
-    global dataframe
+def upload_file():
+    if 'file' not in request.files:
+        flash('Nenhum arquivo enviado')
+        return redirect(request.url)
+    
     file = request.files['file']
-    if file.filename.endswith('.xlsx'):
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], secure_filename(file.filename))
+
+    if file.filename == '':
+        flash('Nome de arquivo vazio')
+        return redirect(request.url)
+
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
-        dataframe = pd.read_excel(filepath, engine='openpyxl')
-        if all(col in dataframe.columns for col in ['Abertura', 'Auxílio', 'Cidade', 'Ass. Social']):
-            session['uploaded'] = True
-        else:
-            return render_template('dashboard.html', error='Arquivo inválido. Verifique os nomes das colunas.')
-    return redirect(url_for('graficos'))
 
-@app.route('/visualizar')
-def visualizar():
-    if 'user' not in session or 'uploaded' not in session:
-        return redirect(url_for('home'))
-    return render_template('visualizar.html', tables=[dataframe.to_html(classes='table table-bordered', index=False)], titles=dataframe.columns.values)
+        # Leitura do Excel
+        df = pd.read_excel(filepath)
 
-@app.route('/graficos')
-def graficos():
-    if 'user' not in session or 'uploaded' not in session:
-        return redirect(url_for('home'))
+        # Verificar colunas obrigatórias
+        colunas_obrigatorias = ['Abertura', 'Auxílio', 'Cidade', 'Ass. Social']
+        if not all(coluna in df.columns for coluna in colunas_obrigatorias):
+            flash('Arquivo inválido. Colunas obrigatórias ausentes.')
+            return redirect(url_for('dashboard'))
 
-    fig_auxilio = px.pie(dataframe, names='Auxílio', title='Distribuição por Tipo de Auxílio')
-    grafico_auxilio = pio.to_html(fig_auxilio, full_html=False)
+        # Converter DataFrame em HTML para exibir (exemplo básico)
+        tabela_html = df.to_html(classes='table table-striped', index=False)
 
-    fig_cidade = px.bar(dataframe['Cidade'].value_counts().reset_index(),
-                        x='index', y='Cidade',
-                        labels={'index': 'Cidade', 'Cidade': 'Total'},
-                        title='Atendimentos por Cidade')
-    grafico_cidade = pio.to_html(fig_cidade, full_html=False)
+        return render_template('dashboard.html', tabela=tabela_html)
 
-    return render_template('graficos.html', grafico_auxilio=grafico_auxilio, grafico_cidade=grafico_cidade)
+    else:
+        flash('Formato de arquivo não permitido. Apenas .xlsx')
+        return redirect(url_for('dashboard'))
 
-@app.route('/logout')
-def logout():
-    session.pop('user', None)
-    session.pop('uploaded', None)
-    return redirect(url_for('home'))
 
 if __name__ == '__main__':
     app.run(debug=True)
