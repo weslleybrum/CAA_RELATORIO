@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Importar Arquivo - CAA_RELATORIO</title>
+    <title>Upload de Arquivo - CAA_RELATORIO</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -12,7 +12,30 @@
             <input type="file" name="file" accept=".xlsx" required>
             <button type="submit">Enviar</button>
         </form>
-        <a href="{{ url_for('dashboard') }}" class="back">← Voltar para o painel</a>
+
+        {% if colunas and dados %}
+            <h3>Prévia dos dados importados:</h3>
+            <table border="1">
+                <thead>
+                    <tr>
+                        {% for col in colunas %}
+                            <th>{{ col }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in dados %}
+                        <tr>
+                            {% for col in colunas %}
+                                <td>{{ row[col] }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+
+        <a href="{{ url_for('dashboard') }}" class="back">← Voltar ao painel</a>
     </div>
 </body>
 </html>
