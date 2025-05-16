@@ -2,34 +2,17 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Importar Dados - CAA_RELATORIO</title>
+    <title>Importar Arquivo - CAA_RELATORIO</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
-        <h2>Importar Planilha</h2>
-        {% if colunas %}
-            <p><strong>Colunas:</strong> {{ colunas }}</p>
-            <table border="1">
-                <tr>
-                    {% for coluna in colunas %}
-                        <th>{{ coluna }}</th>
-                    {% endfor %}
-                </tr>
-                {% for linha in dados %}
-                    <tr>
-                        {% for coluna in colunas %}
-                            <td>{{ linha[coluna] }}</td>
-                        {% endfor %}
-                    </tr>
-                {% endfor %}
-            </table>
-        {% endif %}
-        <form method="post" enctype="multipart/form-data">
-            <input type="file" name="file" required>
+        <h2>Importar Planilha Excel</h2>
+        <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".xlsx" required>
             <button type="submit">Enviar</button>
         </form>
-        <a href="{{ url_for('dashboard') }}">Voltar</a>
+        <a href="{{ url_for('dashboard') }}" class="back">← Voltar para o painel</a>
     </div>
 </body>
 </html>
