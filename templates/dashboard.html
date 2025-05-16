@@ -6,33 +6,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <header>
-        <h1>Dashboard - CAA_RELATORIO</h1>
-    </header>
-
-    <main class="dashboard-container">
-        {% with messages = get_flashed_messages() %}
-          {% if messages %}
-            <div class="flash-message">
-              {% for message in messages %}
-                <p>{{ message }}</p>
-              {% endfor %}
-            </div>
-          {% endif %}
-        {% endwith %}
-
-        <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data">
-            <label for="file">Importar arquivo .xlsx:</label>
-            <input type="file" name="file" accept=".xlsx" required>
-            <button type="submit">Enviar</button>
+    <div class="container">
+        <h2>Bem-vindo ao Painel</h2>
+        <form method="post" action="{{ url_for('logout') }}">
+            <button type="submit">Sair</button>
         </form>
-
-        {% if tabela %}
-            <section class="table-view">
-                <h2>Visualização dos Dados</h2>
-                {{ tabela|safe }}
-            </section>
-        {% endif %}
-    </main>
+        <a href="{{ url_for('upload') }}">Importar Planilha</a>
+    </div>
 </body>
 </html>
