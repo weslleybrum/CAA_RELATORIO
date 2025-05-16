@@ -1,5 +1,0 @@
-Flask
-pandas
-openpyxl
-plotly
-gunicorn
